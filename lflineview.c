@@ -65,6 +65,34 @@ void disable_waiting_for_enter(void)
 }
 
 
+
+void nsystem( char *mycmd )
+{
+   //printf( "<SYSTEM>\n" );
+   //printf( " >> CMD:%s\n", mycmd );
+   //printf( "CMD:%s\n", mycmd );
+   system( mycmd );
+   //printf( "</SYSTEM>\n");
+}
+
+
+
+void nrunwith( char *cmdapp, char *filesource )
+{
+           char cmdi[PATH_MAX];
+           strncpy( cmdi , "  " , PATH_MAX );
+           strncat( cmdi , cmdapp , PATH_MAX - strlen( cmdi ) -1 );
+           strncat( cmdi , " " , PATH_MAX - strlen( cmdi ) -1 );
+           strncat( cmdi , " \"" , PATH_MAX - strlen( cmdi ) -1 );
+           strncat( cmdi ,  filesource , PATH_MAX - strlen( cmdi ) -1 );
+           strncat( cmdi , "\" " , PATH_MAX - strlen( cmdi ) -1 );
+           nsystem( cmdi ); 
+}
+
+
+
+
+
 int user_line_sel = 1;
 
 
@@ -182,12 +210,14 @@ int main( int argc, char *argv[])
     if ( argc >= 2)
     while( gameover == 0  ) 
     {
+        if (   user_line_sel <= 0 ) user_line_sel = 0; 
         disable_waiting_for_enter();
         ch = getchar();
         printf( "[%d]",        user_line_sel );
         printline( argv[ 1 ] , user_line_sel );
 
-        if      ( ch == 'q' )         gameover = 1;
+        if      ( ch == 'Q' )         gameover = 1;
+        else if ( ch == 'g' )         user_line_sel = 1; 
         else if ( ch == 'j' )         user_line_sel++;
         else if ( ch == 'k' )         user_line_sel--;
         else if ( ch == 'd' )         user_line_sel = user_line_sel +15;
@@ -198,8 +228,32 @@ int main( int argc, char *argv[])
         else if ( ch == 's' )         stringline( argv[ 1 ] , user_line_sel );
         else if ( ch == 'p' )         printline(  argv[ 1 ] , user_line_sel );
 
-        else if ( ch == 'y' )
-        {
+       else if ( ch == 'r' )
+       {
+          printline(  argv[ 1 ] , user_line_sel );
+          stringline( argv[ 1 ] , user_line_sel );
+          char cmdi[PATH_MAX];
+          strncpy( cmdi , "  " , PATH_MAX );
+          strncat( cmdi , " less " , PATH_MAX - strlen( cmdi ) -1 );
+          strncat( cmdi , " " , PATH_MAX - strlen( cmdi ) -1 );
+          strncat( cmdi , " \"" , PATH_MAX - strlen( cmdi ) -1 );
+          strncat( cmdi ,  string , PATH_MAX - strlen( cmdi ) -1 );
+          strncat( cmdi , "\" " , PATH_MAX - strlen( cmdi ) -1 );
+          system( cmdi ); 
+          printline(  argv[ 1 ] , user_line_sel );
+       }
+
+       else if ( ch == 'o' )
+       {
+         stringline( argv[ 1 ] , user_line_sel );
+         // copy a line to clipboard
+         //fputs( string , fptt );
+         printf( "Running the selection.\n" );
+         nrunwith( " pkill mupdf ; export DISPLAY=:0 ; screen -d -m mupdf " , string ); 
+       }
+
+       else if ( ch == 'y' )
+       {
          stringline( argv[ 1 ] , user_line_sel );
          // copy a line to clipboard
          strncpy( strpath , getcwd( cwd, PATH_MAX ), PATH_MAX );
@@ -210,7 +264,7 @@ int main( int argc, char *argv[])
          fclose( fptt );
          chdir( strpath );
          printf( "Copying to clipboard the selection.\n" );
-        }
+       }
     }
 
     return 0;
